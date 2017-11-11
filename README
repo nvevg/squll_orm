@@ -1,0 +1,5 @@
+Header-only ORM library for sqlite3, inspired by fnc12's sqlite_orm. Written just for fun and to be more familiar with some of C++14 features.
+
+Currently supports:
+- generating schema
+- not null constraint

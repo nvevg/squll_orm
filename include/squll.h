@@ -33,7 +33,7 @@ void tuple_apply(T _tuple, F _callable) {
 }
 
 template <typename T, typename F>
-void tuple_apply(const T _tuple, F _callable, tuple_size_t<0>) {}
+void tuple_apply(const T , F , tuple_size_t<0>) { }
 
 template <typename T, typename F, std::size_t N>
 void tuple_apply(T &&_tuple, F &&_callable, tuple_size_t<N>) {
@@ -95,7 +95,7 @@ private:
 template <typename... Tables> class schema_impl_t {
 public:
   schema_impl_t(sqlite3 *&_ph, Tables... _tables)
-    : m_tables(std::make_tuple(_tables...)) {}
+    : m_pHandler{_ph}, m_tables(std::make_tuple(_tables...)) {}
 
   void create_tables() {
     std::vector<std::string> tableQueries;
@@ -103,30 +103,28 @@ public:
     
     utility::tuple_apply(m_tables, [&tableQueries](auto &_t) {
 	std::string query = "CREATE TABLE IF NOT EXISTS " + _t.name() + "(" +
-                         _t.generate_sql_description() + ")";
-	std::cout << query << std::endl;
+                         _t.generate_sql_description() + ");";
 	tableQueries.emplace_back(query);
       });
     
     for (const std::string &query : tableQueries) {
-    }
-    // sqlite3_stmt *pSt{nullptr};
-    // sql_finalize_guard guard(pSt);
-    
-    // std::string query = "CREATE TABLE IF NOT EXISTS " + m_table.name() + "(" +
-    //                     m_table.generate_sql_description() + ")";
-    // std::cout << query << std::endl;
+      sqlite3_stmt *pSt{nullptr};
+      sql_finalize_guard guard(pSt);
 
-    // int err_code = sqlite3_prepare_v2(super::m_pHandler, query.c_str(),
-    //                                   query.length(), &pSt, nullptr);
-    // if (err_code != SQLITE_OK)
-    //   throw std::runtime_error(std::string(sqlite3_errstr(err_code)));
+      int err_code = sqlite3_prepare_v2(m_pHandler, query.c_str(),
+					query.length(), &pSt, nullptr);
+      if (err_code != SQLITE_OK)
+	throw std::runtime_error(std::string(sqlite3_errstr(err_code)));
+
+      if (sqlite3_step(pSt) != SQLITE_OK)
+	throw std::runtime_error(std::string(sqlite3_errstr(err_code)));
+    }
   }
 
 private:
   typedef std::tuple<Tables...> tables_tuple_t;
 
-  sqlite3 *m_pHandler{nullptr};
+  sqlite3 *&m_pHandler;
   tables_tuple_t m_tables;
 };
 }
@@ -162,7 +160,7 @@ private:
     std::string res;
     constexpr std::size_t constr_count = std::tuple_size<constraints_t>::value;
     std::size_t constr_index = 0;
-    utility::tuple_apply(m_constraints, [&res, &constr_index](auto& _c) {
+    utility::tuple_apply(m_constraints, [&res, &constr_index, constr_count](auto& _c) {
 	res.append(_c.descr());
 	if (constr_index < constr_count - 1)
 	  res.append(" ");
