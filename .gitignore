@@ -1,3 +1,5 @@
 *.o
 test/test
 *.db
+a.out
+build/*
