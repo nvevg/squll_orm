@@ -102,8 +102,8 @@ public:
     tableQueries.reserve(std::tuple_size<tables_tuple_t>::value);
     
     utility::tuple_apply(m_tables, [&tableQueries](auto &_t) {
-	std::string query = "CREATE TABLE IF NOT EXISTS " + _t.name() + "(" +
-                         _t.generate_sql_description() + ");";
+	std::string query = "CREATE TABLE IF NOT EXISTS " + _t.name() + " (" +
+                         _t.generate_sql_description() + ")";
 	tableQueries.emplace_back(query);
       });
     
@@ -116,7 +116,7 @@ public:
       if (err_code != SQLITE_OK)
 	throw std::runtime_error(std::string(sqlite3_errstr(err_code)));
 
-      if (sqlite3_step(pSt) != SQLITE_OK)
+      if (sqlite3_step(pSt) != SQLITE_DONE)
 	throw std::runtime_error(std::string(sqlite3_errstr(err_code)));
     }
   }
