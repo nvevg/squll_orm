@@ -16,7 +16,7 @@ void test() {
   
   auto schema = squll::schema("test.db",
   			      table("users",
-  				    column("id", &user::id)
+  				    column("id", &user::id, constraints::not_null(), constraints::primary_key(true))
   				    )
 			      );
   

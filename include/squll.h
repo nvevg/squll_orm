@@ -15,7 +15,7 @@ template <typename T> struct type_map {
 };
 
 template <> struct type_map<int> {
-  std::string type() const { return "INT"; }
+  std::string type() const { return "INTEGER"; }
 };
 
 template <> struct type_map<unsigned> : public type_map<int> {};
@@ -44,8 +44,16 @@ void tuple_apply(T &&_tuple, F &&_callable, tuple_size_t<N>) {
 }
 
 namespace constraints {
-struct autoincrement {
-  std::string descr() const { return "AUTOINCREMENT"; }
+struct primary_key {
+public:
+  primary_key(bool _is_autoincrement = false): m_autoincrement{_is_autoincrement} { }
+  std::string descr() const {
+    if (m_autoincrement)
+      return "PRIMARY KEY AUTOINCREMENT";
+    return "PRIMARY KEY";
+  }
+private:
+  bool m_autoincrement;
 };
   struct not_null {
     std::string descr() const { return "NOT NULL"; }
